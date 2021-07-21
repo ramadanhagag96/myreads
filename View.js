@@ -1,49 +1,38 @@
-import React from "react";
+import React from 'react';
+import PropTypes from 'prop-types';
+import BookShelfChanger from './BookShelfChanger';
 
-import PropTypes from "prop-types";
+function Book(props) {
+	const { book, onChangeShelf } = props;
 
-function View(props) {
-	const shelfUpdateHandler = (e) => {
-		props.clickShelfHandler(props.book, e.target.value);
-	};
+	const width = 128;
+	const height = 188;
 
-	const img = props.book.imageLinks ? props.book.imageLinks.thumbnail : null;
+	const thumbnail =
+		book.imageLinks === undefined
+			? `https://dummyimage.com/${width}x${height}/000/fff.png&text=No+Image`
+			: book.imageLinks.thumbnail;
+
+	const authors = book.authors === undefined ? 'Unknown Author' : book.authors.join(', ');
 
 	return (
-		<div>
-			<li>
-				<div className="book">
-					<div className="book-top">
-						<div
-							className="book-cover"
-							style={{
-								width: 128,
-								height: 193,
-								backgroundImage: `url(${img})`,
-							}}
-						></div>
-						<div className="book-shelf-changer">
-							<select onChange={shelfUpdateHandler} value={props.book.shelf}>
-								<option value="move" disabled>
-									Move to...
-								</option>
-								<option value="currentlyReading">Currently Reading</option>
-								<option value="wantToRead">Want to Read</option>
-								<option value="read">Read</option>
-								<option value="none">None</option>
-							</select>
-						</div>
-					</div>
-					<div className="book-title">{props.book.title}</div>
-					<div className="book-authors">{props.book.authors}</div>
+		<li>
+			<div className="book">
+				<div className="book-top">
+					<div
+						className="book-cover"
+						style={{ width: 128, height: 188, backgroundImage: `url(${thumbnail})` }}
+					/>
+					<BookShelfChanger book={book} onChangeShelf={onChangeShelf} />
 				</div>
-			</li>
-		</div>
+				<div className="book-title">{book.title}</div>
+				<div className="book-authors">{authors}</div>
+			</div>
+		</li>
 	);
 }
 
-View.propTypes = {
-	clickShelfHandler: PropTypes.func.isRequired,
+Book.propTypes = {
+	book: PropTypes.object.isRequired,
+	onChangeShelf: PropTypes.func.isRequired
 };
-
-export default View;
