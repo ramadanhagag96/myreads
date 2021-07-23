@@ -1,97 +1,75 @@
-import React from 'react';
 
-import { Link } from 'react-router-dom';
+import React from 'react'
+import * as BooksAPI from './BooksAPI'
+import {Link} from 'react-router-dom'
+import Book from './shBCH';
+import './App.css'
 
-import * as BooksAPI from './BooksAPI';
 
-import View from './View';
+export default class srch extends React.Component {
+    state = {
+        query: '',
+        Books: []
+    };
 
-import PropTypes from 'prop-types';
+    Cat = (books) => {
+        for (let book of books) {
+            book.shelf = 'none'
+        }
+        for (let book of books) {
+            for (let oldbook of this.props.addedBooks) {
+                if (oldbook.id === book.id) {
+                    book.shelf = oldbook.shelf
+                }
+            }
+        }
+        return books
+    };
 
-export default class SearchBooks extends React.Component {
-	static propTypes = {
-		mybooks: PropTypes.array.isRequired,
-		onChange: PropTypes.func.isRequired,
-		
-	};
+    /*Used for searching and storing the value of search result returned*/
+    searchb = (event) => {
+        let q = event.target.value;
+        this.setState({
+            query: q
+        });
+        BooksAPI.search(q).then(book => {
+            if (book === undefined || (book.error)) {
+                this.setState({
+                    Books: []
+                })
+            }
+            else {
+                book = this.Cat(book)
+                this.setState({
+                    Books: book
+                })
+            }
+        })
+    };
 
-	state = {
-		Books: [],
-		query: '',
-		searchError: false,
-	};
+    render() {
+        return (
+            <div className="search-books">
+                <div className="search-books-bar">
+                    <Link className="close-search" to='/'>Close</Link>
+                    <div className="search-books-input-wrapper">
+                        <input type="text"
+                               placeholder="Search "
+                               value={this.state.query}
+                               onChange={this.searchb}/>
+                    </div>
+                </div>
+                <div className="search-books-results">
+                    <ol className="books-grid">
+                        {this.state.Books && this.state.Books.map(book =>
+                            <li key={book.id}>
+                                <shBCH shelfHandler={this.props.shelfHandler} book={book}/>
+                            </li>
+                        )}
+                    </ol>
+                </div>
+            </div>
+        )
+    }
 
-	searchHander = (e) => {
-		let query = e.target.value;
-		this.setState(() => {
-			return { query: query };
-		});
-		this.updateSearchHandler(query);
-	};
-
-	updateSearchHandler = (query) => {
-		if (query) {
-			BooksAPI.search(query).then((Books) => {
-				if (Books.length > 0) {
-					Books = this.shelfChangeHandler(Books);
-					this.setState(() => ({
-						Books: Books,
-						searchError: false,
-					}));
-				} else {
-					this.setState(() => ({
-						Books: [],
-						searchError: true,
-					}));
-				}
-			});
-		} else {
-			this.setState((currentState) => ({
-				Books: currentState.Books,
-				searchError: false,
-			}));
-		}
-	};
-	shelfChangeHandler = (Books) => {
-		let mybooks = this.props.mybooks;
-		// if book is in current list, set current shelf to book.shelf
-
-		Books.forEach((book) => {
-			book.shelf = 'none';
-			mybooks.forEach((myBook) => {
-				if (myBook.id === book.id) {
-					book.shelf = myBook.shelf;
-				}
-			});
-		});
-		return Books;
-	};
-
-	render() {
-		const { Books, searchError } = this.state;
-		return (
-			<div className='search-books'>
-				<div className='search-books-bar'>
-					<Link to='/' className='close-search'>
-						Close
-					</Link>
-					<div className='search-books-input-wrapper'>
-						<input autoFocus type='text' placeholder='Search books by title or author' value={this.state.query} onChange={this.searchHander} />
-					</div>
-				</div>
-				<div className='search-books-results'>
-					{Books.length > 0 && (
-						<div>
-							<ol className='books-grid'>
-								{Books.map((book) => (
-									<View key={book.id} book={book} clickShelfHandler={this.props.onChange} />
-								))}
-							</ol>
-						</div>
-					)}
-					{searchError && <div> No Books Available </div>}
-				</div>
-			</div>
-		);
-	}
 }
